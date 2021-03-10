@@ -142,7 +142,7 @@ class AEAD_AES_128_CBC_HMAC_SHA_256(AEAD):
         data = aad + dataWithoutPadding[:lengthOfData]
         tag = self.__auth(data)
 
-        if (tag[:16] != dataWithoutPadding[lengthOfData:]):
+        if (tag[:16] != dataWithoutPadding[lengthOfData:]): #validate the MAC
             return "FAIL"
         else:
             return dataWithoutPadding[:lengthOfData]
