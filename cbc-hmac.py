@@ -65,6 +65,7 @@ class AEAD_AES_128_CBC_HMAC_SHA_256(AEAD):
         lengthOfPaddingInPlain = PaddingLength + 1
         lengthOdPlainWithOutPadding = len(plainText) - lengthOfPaddingInPlain
         return plainText[:lengthOdPlainWithOutPadding]
+        
     def __pad(self, data):
         """
         Pad the data so that the block size is a multiple of block_len

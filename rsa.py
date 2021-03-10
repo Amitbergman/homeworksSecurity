@@ -4,7 +4,7 @@ https://tools.ietf.org/html/rfc2313
 """
 from os import urandom
 from math import log
-from Crypto.Util import number
+from Cryptodome.Util import number
 import sys
 
 # To support recursion in egcd
@@ -38,7 +38,7 @@ def key_gen(n_length):
     Generate RSA key
     :param n_length: length of modulus
     :return: k, e, N, p, q
-    """
+    """ 
     if n_length % 8:
         raise Exception("n_length must be divisible by 8")
 
@@ -69,11 +69,11 @@ class RSA(object):
             print('init vars:', k, N)
         if (p is not None) and (q is not None):
             self.phin = (p - 1) * (q - 1)
-            self.d = ?
+            self.d = modinv(self.e, self.phin) # should be e^-1 so that we will be able to decrypt
             self.test()
         else:
             self.d = None
-        if self.var:
+        if self.var: 
             print(log(N, 2), N)
             if self.d is not None:
                 print(hex(self.d))
@@ -121,8 +121,9 @@ class RSA_PKCS_1(RSA):
             raise Exception("first byte must be nonzero 0 if bt=0")
 
         if ps is None:
-            ps = ?
-        eb = ?  # Encryption Block
+            ps = 2 #???
+        
+        eb = bytes([0]) + self.bt + ps + bytes([0]) + d   # Encryption Block ????
 
         x = int.from_bytes(eb, byteorder='big')  # Conversion to integer
 
@@ -176,10 +177,12 @@ class RSA_PKCS_1(RSA):
         :param eb: encryption block
         :return: parsed data
         """
-        ?
+        return 12 #?
+
 
 
 if __name__ == "__main__":
+
     n_length = 4096
     data = b'secret message'
     bt = 2
