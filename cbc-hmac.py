@@ -52,8 +52,19 @@ class AEAD_AES_128_CBC_HMAC_SHA_256(AEAD):
         :param data: input data
         :return: stripped data
         """
-        return "12"
 
+        plainText = data
+        PaddingLength = plainText[-1] #the padding is the last byte of the plain as int
+
+        if(PaddingLength >= len(plainText)): #if the padding is longer than the plain text it cannot be valid
+            raise ValueError("problematic padding")
+
+        for i in range(PaddingLength + 1):
+            if (plainText[len(plainText)-1-i] != PaddingLength):
+                raise ValueError("problematic padding")
+        lengthOfPaddingInPlain = PaddingLength + 1
+        lengthOdPlainWithOutPadding = len(plainText) - lengthOfPaddingInPlain
+        return plainText[:lengthOdPlainWithOutPadding]
     def __pad(self, data):
         """
         Pad the data so that the block size is a multiple of block_len
@@ -62,10 +73,8 @@ class AEAD_AES_128_CBC_HMAC_SHA_256(AEAD):
         """
 
         blockLen = self.block_len
-        if (len(data)%blockLen == 0):
-            return data
         
-        paddingLength = blockLen - len(data)%blockLen - 1
+        paddingLength = (blockLen - len(data)%blockLen - 1)%blockLen
         padding = bytes([paddingLength for i in range(paddingLength+1)])        
         return data + padding
 
@@ -121,11 +130,25 @@ class AEAD_AES_128_CBC_HMAC_SHA_256(AEAD):
         :param nonce: nonce
         :return: decrypted data if verification succeeds, fail state else.
         """
-        return "12"
+        plain = self.__decrypt(c, nonce)
 
+        dataWithoutPadding = self.__strip_padding(plain)
+        
+        
+        lengthOfPlain = len(dataWithoutPadding)
+        lengthOfData = lengthOfPlain - 16
+        lengthOfTag = 16
+
+        data = aad + dataWithoutPadding[:lengthOfData]
+        tag = self.__auth(data)
+
+        if (tag[:16] != dataWithoutPadding[lengthOfData:]):
+            return "FAIL"
+        else:
+            return dataWithoutPadding[:lengthOfData]
 
 if __name__ == "__main__":
-    data = b"\xef8K\x17c\xb2hp\x1a$\xecS\x86\x9d\xbc\x11j\x01h\x15\xef\xbd,\xfd\xdc\xb4'\xc2\x03\xfa\t\x05\x81\xa3\xdf\xea*{\x8c\xe4\xbcRq\xe1\xfe\xc4\xd7\x12\x93qH\xff\xb8\xd1\x8f\xb8S\xae\xf6\x9c\xc7j{ 67\xfccH\xf4v)\x94\xa6\x14\xf7\xac\x94\xb4?\x1c_\x12Y\x94:Q\x9c\xa0\xd8n\xc6R\xdc\xc7W\xe2\xb0\x1c5"
+    data = b"hello world12351"
     aad = b"{ \xff\x1b\xca\x98\xd0\xe5\xa55\xca\xa9\xd2U\x8a8\x90K4\x90\xb2\xfa\xa9?O\x80\xea\xa2\x85\xa2ECMEo(\x1f'\x01\xf1\xa4\xd4J\x9a\xfc\xf3\x89\x93\x86\xcf"
     mac_key = b'\x9e\xdf\xdd\xb1|;\xd4\xbc\xff\x03\xb7\tZy\xef\xeb'
     enc_key = b'\xdfei\xac\x86\xa5U_r\xff\r\x1c\x8d\x02\xac\x97'
@@ -141,5 +164,3 @@ if __name__ == "__main__":
 
     p = aead.authenticated_dec(ciphertext, aad, nonce)
     print(p)
-    print(len(data))
-    print(len(ciphertext))
